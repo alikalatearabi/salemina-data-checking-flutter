@@ -153,7 +153,7 @@ class _ProductPageInputState extends State<ProductPage> {
 
     if (pickedFile != null) {
       _image = File(pickedFile.path);
-      uploadInfoImageApi(context, _image!);
+      uploadInfoImageApi(context, _image!, showLoadingDialog);
     }
   }
 
@@ -162,7 +162,7 @@ class _ProductPageInputState extends State<ProductPage> {
 
     if (pickedFile != null) {
       _image = File(pickedFile.path);
-      uploadInfoImageApi(context, _image!);
+      uploadInfoImageApi(context, _image!, showLoadingDialog);
     }
   }
 
@@ -171,7 +171,7 @@ class _ProductPageInputState extends State<ProductPage> {
 
     if (pickedFile != null) {
       _mainImage = File(pickedFile.path);
-      await uploadMainImageApi(context, _mainImage!);
+      await uploadMainImageApi(context, _mainImage!, showLoadingDialog);
     }
   }
 
@@ -180,7 +180,7 @@ class _ProductPageInputState extends State<ProductPage> {
 
     if (pickedFile != null) {
       _mainImage = File(pickedFile.path);
-      await uploadMainImageApi(context, _mainImage!);
+      await uploadMainImageApi(context, _mainImage!, showLoadingDialog);
     }
   }
 
@@ -498,7 +498,7 @@ class _ProductPageInputState extends State<ProductPage> {
 
     if (pickedFile != null) {
       _extraImage = File(pickedFile.path);
-      uploadExtraImageApi(context, _extraImage!);
+      uploadExtraImageApi(context, _extraImage!,  showLoadingDialog);
     }
   }
 
@@ -507,7 +507,7 @@ class _ProductPageInputState extends State<ProductPage> {
 
     if (pickedFile != null) {
       _extraImage = File(pickedFile.path);
-      uploadExtraImageApi(context, _extraImage!);
+      uploadExtraImageApi(context, _extraImage!, showLoadingDialog);
     }
   }
 
@@ -532,6 +532,22 @@ class _ProductPageInputState extends State<ProductPage> {
           ),
         ],
       ),
+    );
+  }
+
+  void showLoadingDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          child: Center(
+            child: CircularProgressIndicator(),
+          ),
+        );
+      },
     );
   }
 
@@ -990,7 +1006,7 @@ class _ProductPageInputState extends State<ProductPage> {
               ),
             ),
           ),
-          SizedBox(height: 20)
+          SizedBox(height: 20),
         ],
       )),
     );

@@ -7,6 +7,7 @@ import 'package:barcode_scan2/barcode_scan2.dart';
 import 'package:salemina_data/classes/product.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:salemina_data/screens/home/product_page.dart';
+import 'package:salemina_data/screens/profile/ProfilePage.dart';
 import 'package:salemina_data/services/curved_top_clipper.dart';
 import '/methods/login.dart';
 
@@ -167,7 +168,7 @@ class _MyHomePageState extends State<MyHomePage> {
             content: Directionality(
               textDirection: TextDirection.rtl,
               child: Text(
-                'این محصول قابل نمایش نیست',
+                'این محصول از قبل بررسی و ثبت شده است.',
                 style: TextStyle(fontSize: 18),
               ),
             ),
@@ -185,39 +186,6 @@ class _MyHomePageState extends State<MyHomePage> {
     } finally {
       httpClient.close();
     }
-  }
-
-  void showPopupPictureUploaded(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12.0),
-          ),
-          backgroundColor: Colors.green,
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                ".عکس با موفقیت آپلود گردید",
-                style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
-                textAlign: TextAlign.right,
-              ),
-              TextButton(
-                onPressed: () {
-                  Navigator.of(context).pop();
-                },
-                child: Text(
-                  "تایید",
-                  style: TextStyle(color: Colors.white),
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
   }
 
   bool barcodeValidator(BuildContext context, String barcode) {
@@ -251,6 +219,49 @@ class _MyHomePageState extends State<MyHomePage> {
           child: Column(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
+                Container(
+                  width: MediaQuery.of(context).size.width * 0.4,
+                  padding: EdgeInsets.symmetric(horizontal: 15, vertical: 5),
+                  decoration: BoxDecoration(
+                    color: Colors.black, // Black background
+                    borderRadius: BorderRadius.circular(12), // Rounded corners
+                  ),
+                  child: InkWell(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => ProfilePage(
+                            profileName: _username.text,
+                          ),
+                        ),
+                      );
+                    },
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Baseline(
+                          baseline: 20.0, // Adjust based on icon size
+                          baselineType: TextBaseline.alphabetic,
+                          child: Text(
+                            _username.text,
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 17,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                        ),
+                        Icon(
+                          Icons.person,
+                          color: Colors.white,
+                          size: 26,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
                 SizedBox(height: MediaQuery.of(context).size.height * 0.09),
                 Image.asset('assets/logo.png'),
                 Center(

@@ -5,7 +5,9 @@ import 'package:http/http.dart' as http;
 import 'package:salemina_data/shared/popup.dart';
 import 'package:salemina_data/shared/styled_banner.dart';
 
-Future<void> uploadMainImageApi(BuildContext context, File imageFile) async {
+Future<void> uploadMainImageApi(
+    BuildContext context, File imageFile, Function loadingDialog) async {
+  loadingDialog(context);
   String url = 'http://194.147.222.179:3005/api/product/image/main';
 
   var request = http.MultipartRequest('POST', Uri.parse(url));
@@ -14,13 +16,17 @@ Future<void> uploadMainImageApi(BuildContext context, File imageFile) async {
   var response = await request.send();
 
   if (response.statusCode == 200) {
+    Navigator.of(context).pop();
     popUp(context, ".عکس با موفقیت آپلود گردید");
   } else {
     return;
   }
 }
 
-Future<void> uploadInfoImageApi(BuildContext context, File imageFile) async {
+Future<void> uploadInfoImageApi(
+    BuildContext context, File imageFile, Function loadingDialog) async {
+  loadingDialog(context);
+
   String url = 'http://194.147.222.179:3005/api/product/image';
 
   var request = http.MultipartRequest('POST', Uri.parse(url));
@@ -29,13 +35,17 @@ Future<void> uploadInfoImageApi(BuildContext context, File imageFile) async {
   var response = await request.send();
 
   if (response.statusCode == 200) {
+    Navigator.of(context).pop();
     popUp(context, ".عکس با موفقیت آپلود گردید");
   } else {
     return;
   }
 }
 
-Future<void> uploadExtraImageApi(BuildContext context, File imageFile) async {
+Future<void> uploadExtraImageApi(
+    BuildContext context, File imageFile, Function loadingDialog) async {
+  loadingDialog(context);
+
   String url = 'http://194.147.222.179:3005/api/product/image/extra';
 
   var request = http.MultipartRequest('POST', Uri.parse(url));
@@ -44,6 +54,7 @@ Future<void> uploadExtraImageApi(BuildContext context, File imageFile) async {
   var response = await request.send();
 
   if (response.statusCode == 200) {
+    Navigator.of(context).pop();
     popUp(context, 'عکس با موفقیت اضافه شد');
   } else {
     print('Image upload failed with status: ${response.statusCode}');
@@ -87,20 +98,18 @@ Future<void> submitNewProduct(
 
     String productExtraCode = '';
 
-    if (
-      calorieExt.text != '' ||
-      totalFat.text != '' ||
-      saturatedFat.text != '' ||
-      unsaturatedFat.text != '' ||
-      transFattyAcids.text != '' ||
-      protein.text != '' ||
-      carbohydrate.text != '' ||
-      sugarExt.text != '' ||
-      saltExt.text != '' ||
-      fiber.text != '' ||
-      sodium.text != '' ||
-      cholesterol.text != ''
-    ) {
+    if (calorieExt.text != '' ||
+        totalFat.text != '' ||
+        saturatedFat.text != '' ||
+        unsaturatedFat.text != '' ||
+        transFattyAcids.text != '' ||
+        protein.text != '' ||
+        carbohydrate.text != '' ||
+        sugarExt.text != '' ||
+        saltExt.text != '' ||
+        fiber.text != '' ||
+        sodium.text != '' ||
+        cholesterol.text != '') {
       productExtraCode = '7';
     }
 
@@ -124,7 +133,8 @@ Future<void> submitNewProduct(
       "cluster": '',
       "picture_new": infoImage.path.split('/').last,
       "picture_main_info": mainImage.path.split('/').last,
-      "picture_extra_info": extraImage != null ? extraImage.path.split('/').last : '',
+      "picture_extra_info":
+          extraImage != null ? extraImage.path.split('/').last : '',
       "per_ext": '',
       "calorie_ext": calorieExt.text,
       "cal_fat": calFat.text,
@@ -172,7 +182,8 @@ Future<void> submitNewProduct(
         });
       } else {
         final responseBody = await response.transform(utf8.decoder).join();
-        print('Failed to update product: ${response.statusCode} - $responseBody');
+        print(
+            'Failed to update product: ${response.statusCode} - $responseBody');
       }
     } catch (error) {
       print('Error submitting product: $error');
