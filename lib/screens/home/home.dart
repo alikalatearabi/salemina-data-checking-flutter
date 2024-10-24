@@ -232,7 +232,7 @@ class _MyHomePageState extends State<MyHomePage> {
                         context,
                         MaterialPageRoute(
                           builder: (context) => ProfilePage(
-                            profileName: _username.text,
+                            username: _username.text,
                           ),
                         ),
                       );

@@ -192,3 +192,23 @@ Future<void> submitNewProduct(
     }
   }
 }
+
+Future<Map<String, dynamic>?> fetchProfileData(String username) async {
+  final url =
+      Uri.parse('http://194.147.222.179:3005/api/product/status/$username');
+
+  try {
+    final response = await http.get(url);
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body) as Map<String, dynamic>;
+    } else {
+      // Log the error and return null
+      print('Failed to load user profile data: ${response.statusCode}');
+      return null; // Return null for non-200 responses
+    }
+  } catch (e) {
+    print('Error fetching user profile data: $e');
+    return null; // Return null in case of an error
+  }
+}
