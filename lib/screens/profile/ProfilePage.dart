@@ -7,10 +7,10 @@ class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key, required this.username});
 
   @override
-  _ProfilePageState createState() => _ProfilePageState();
+  ProfilePageState createState() => ProfilePageState();
 }
 
-class _ProfilePageState extends State<ProfilePage> {
+class ProfilePageState extends State<ProfilePage> {
   late Future<Map<String, dynamic>?> userProfileData;
 
   @override
@@ -36,13 +36,13 @@ class _ProfilePageState extends State<ProfilePage> {
               return const CircularProgressIndicator();
             } else if (snapshot.hasError) {
               return Text('Error: ${snapshot.error}');
-            } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+            } else if (!snapshot.hasData || snapshot.data == null) {
               return const Text('No data available');
             } else {
-              if ((snapshot.data!['Main_data_status'] == null ||
-                      snapshot.data!['Main_data_status'].isEmpty) &&
-                  (snapshot.data!['Extra_data_status'] == null ||
-                      snapshot.data!['Extra_data_status'].isEmpty)) {
+              final mainDataStatus = snapshot.data!['Main_data_status'] ?? {};
+              final extraDataStatus = snapshot.data!['Extra_data_status'] ?? {};
+
+              if (mainDataStatus.isEmpty && extraDataStatus.isEmpty) {
                 return const Card(
                   margin: EdgeInsets.all(16),
                   child: Padding(
@@ -78,12 +78,20 @@ class _ProfilePageState extends State<ProfilePage> {
 
     // Create Main Data Status Cards
     data['Main_data_status'].forEach((key, value) {
-      cards.add(_buildCard(statusMap[key]!, value.toString()));
+      final title = statusMap[key];
+      if (title != null) {
+        // Check if title is not null
+        cards.add(_buildCard(title, value.toString()));
+      }
     });
 
     // Create Extra Data Status Cards
     data['Extra_data_status'].forEach((key, value) {
-      cards.add(_buildCard(statusMap['extra$key']!, value.toString()));
+      final title = statusMap['extra$key'];
+      if (title != null) {
+        // Check if title is not null
+        cards.add(_buildCard(title, value.toString()));
+      }
     });
 
     return SingleChildScrollView(

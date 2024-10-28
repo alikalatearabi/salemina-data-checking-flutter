@@ -242,7 +242,7 @@ class _MyHomePageState extends State<MyHomePage> {
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
                         Baseline(
-                          baseline: 20.0, // Adjust based on icon size
+                          baseline: 20.0,
                           baselineType: TextBaseline.alphabetic,
                           child: Text(
                             _username.text,
@@ -292,17 +292,18 @@ class _MyHomePageState extends State<MyHomePage> {
                               width: MediaQuery.of(context).size.width * 0.9,
                               height: 50,
                               decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(5),
+                                borderRadius: BorderRadius.circular(12),
                                 color: Colors.black,
                               ),
                               child: const Center(
-                                  child: Text(
-                                'اسکن بارکد محصول',
-                                style: TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 16),
-                              )),
+                                child: Text(
+                                  'اسکن بارکد محصول',
+                                  style: TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 16),
+                                ),
+                              ),
                             ),
                           ),
                           Container(
