@@ -1,15 +1,13 @@
-// ignore_for_file: non_constant_identifier_names, prefer_const_constructors, deprecated_member_use, sized_box_for_whitespace
 import 'dart:convert';
-import 'dart:core';
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:barcode_scan2/barcode_scan2.dart';
-import 'package:salemina_data/classes/product.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:salemina_data/classes/product.dart';
 import 'package:salemina_data/screens/home/product_page.dart';
 import 'package:salemina_data/screens/profile/ProfilePage.dart';
 import 'package:salemina_data/services/curved_top_clipper.dart';
 import '/methods/login.dart';
+import 'package:http/http.dart' as http;
 
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key});
@@ -20,40 +18,14 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   String scannedBarcode = 'No barcode scanned yet.';
-
-  late TextEditingController _barcodeController;
-  final _nameController = TextEditingController();
-  final _descriptionController = TextEditingController();
-  final _brandController = TextEditingController();
-  final _perController = TextEditingController();
-  final _calorieController = TextEditingController();
-  final _sugerController = TextEditingController();
-  final _fatController = TextEditingController();
-  final _saltController = TextEditingController();
-  final _trans_fatty_acidsController = TextEditingController();
-  final _Cal_fat = TextEditingController();
-  final _total_fat = TextEditingController();
-  final _saturated_fat = TextEditingController();
-  final _unsaturated_fat = TextEditingController();
-  final _trans_fat = TextEditingController();
-  final _protein = TextEditingController();
-  final _sugar_ext = TextEditingController();
-  final _carbohydrate = TextEditingController();
-  final _fiber = TextEditingController();
-  final _salt_ext = TextEditingController();
-  final _sodium = TextEditingController();
-  final _cholesterol = TextEditingController();
-  final _username = TextEditingController();
+  final _barcodeController = TextEditingController();
+  final _username = ValueNotifier<String>('');
   final _password = TextEditingController();
-  bool isTextBox = false;
   final picker = ImagePicker();
-  String username = '';
 
   @override
   void initState() {
     super.initState();
-
-    _barcodeController = TextEditingController();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       showLoginPopup(context, _username, _password);
     });
@@ -62,88 +34,28 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   void dispose() {
     _barcodeController.dispose();
-    _nameController.dispose();
-    _descriptionController.dispose();
-    _brandController.dispose();
-    _perController.dispose();
-    _calorieController.dispose();
-    _sugerController.dispose();
-    _fatController.dispose();
-    _saltController.dispose();
-    _trans_fatty_acidsController.dispose();
-    _Cal_fat.dispose();
-    _total_fat.dispose();
-    _saturated_fat.dispose();
-    _unsaturated_fat.dispose();
-    _trans_fat.dispose();
-    _protein.dispose();
-    _sugar_ext.dispose();
-    _carbohydrate.dispose();
-    _fiber.dispose();
-    _salt_ext.dispose();
-    _sodium.dispose();
-    _cholesterol.dispose();
+    _username.dispose();
+    _password.dispose();
     super.dispose();
   }
 
   Future<void> scanBarcode() async {
     try {
-      ScanResult scanResult;
-      String scannedBarcode;
+      final scanResult = await BarcodeScanner.scan();
+      final scannedBarcode = scanResult.rawContent;
 
-      do {
-        scanResult = await BarcodeScanner.scan();
-        scannedBarcode = scanResult.rawContent;
+      if (scannedBarcode.isNotEmpty &&
+          scannedBarcode.length == 13 &&
+          int.tryParse(scannedBarcode) != null) {
+        setState(() {
+          this.scannedBarcode = scannedBarcode;
+        });
 
-        if (scannedBarcode.isEmpty) {
-          return;
-        }
-
-        if (scannedBarcode.length == 13 &&
-            int.tryParse(scannedBarcode) != null) {
-          setState(() {
-            scannedBarcode = scannedBarcode;
-          });
-
-          final product = await fetchProductData(scannedBarcode);
-
-          if (product == null) {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (ctx) => ProductPage(
-                  barcode: scannedBarcode,
-                  username: _username.text,
-                ),
-              ),
-            );
-          } else {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (ctx) => ProductPage(
-                  barcode: scannedBarcode,
-                  username: _username.text,
-                  product: product,
-                ),
-              ),
-            );
-          }
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Directionality(
-                textDirection: TextDirection.rtl,
-                child: Text(
-                  'بارکد صحیح نیست',
-                  style: TextStyle(fontSize: 18),
-                ),
-              ),
-              backgroundColor: Colors.red,
-            ),
-          );
-        }
-      } while (scannedBarcode.isEmpty);
+        final product = await fetchProductData(scannedBarcode);
+        navigateToProductPage(scannedBarcode, product);
+      } else {
+        showInvalidBarcodeMessage();
+      }
     } catch (e) {
       setState(() {
         scannedBarcode = 'Failed to get barcode: $e';
@@ -151,31 +63,18 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
-  Future<dynamic> fetchProductData(String barcode) async {
-    final url = 'http://194.147.222.179:3005/api/product/${barcode}';
-    HttpClient httpClient = HttpClient();
+  Future<Product?> fetchProductData(String barcode) async {
+    final url = 'http://194.147.222.179:3005/api/product/$barcode';
+
     try {
-      final request = await httpClient.getUrl(Uri.parse(url));
-      final response = await request.close();
+      final response = await http.get(Uri.parse(url));
 
       if (response.statusCode == 200) {
-        final responseBody = await response.transform(utf8.decoder).join();
-        final jsonData = jsonDecode(responseBody);
+        final jsonData = jsonDecode(response.body);
         return Product.fromJson(jsonData);
       } else if (response.statusCode == 400) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Directionality(
-              textDirection: TextDirection.rtl,
-              child: Text(
-                'این محصول از قبل بررسی و ثبت شده است.',
-                style: TextStyle(fontSize: 18),
-              ),
-            ),
-            backgroundColor: Colors.red,
-          ),
-        );
-        return 'not_found';
+        // Handle specific error response
+        return null; // Return null if the product is not found
       } else {
         print('Failed to load product data: ${response.statusCode}');
         return null;
@@ -183,229 +82,246 @@ class _MyHomePageState extends State<MyHomePage> {
     } catch (e) {
       print('Error fetching product data: $e');
       return null;
-    } finally {
-      httpClient.close();
     }
   }
 
-  bool barcodeValidator(BuildContext context, String barcode) {
-    if (_barcodeController.text.length == 13 && int.tryParse(barcode) != null) {
-      return true;
-    }
-
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Directionality(
-        textDirection: TextDirection.rtl,
-        child: Text(
-          'بارکد صحیح نیست',
-          style: TextStyle(fontSize: 18),
+  void navigateToProductPage(String barcode, dynamic product) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (ctx) => ProductPage(
+          barcode: barcode,
+          username: _username.value,
+          product: product,
         ),
       ),
-      backgroundColor: Colors.red,
-    ));
+    );
+  }
 
-    return false;
+  void showInvalidBarcodeMessage() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Directionality(
+          textDirection: TextDirection.rtl,
+          child: Text(
+            'بارکد صحیح نیست',
+            style: TextStyle(fontSize: 18),
+          ),
+        ),
+        backgroundColor: Colors.red,
+      ),
+    );
+  }
+
+  void showProductAlreadyRegisteredMessage() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Directionality(
+          textDirection: TextDirection.rtl,
+          child: Text(
+            'این محصول از قبل بررسی و ثبت شده است.',
+            style: TextStyle(fontSize: 18),
+          ),
+        ),
+        backgroundColor: Colors.red,
+      ),
+    );
+  }
+
+  bool barcodeValidator(String barcode) {
+    return barcode.length == 13 && int.tryParse(barcode) != null;
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: AppBar(),
-        backgroundColor: const Color.fromARGB(248, 255, 255, 255),
-        body: SingleChildScrollView(
-            child: ConstrainedBox(
+      appBar: AppBar(),
+      backgroundColor: const Color.fromARGB(248, 255, 255, 255),
+      body: SingleChildScrollView(
+        child: ConstrainedBox(
           constraints:
               BoxConstraints(minHeight: MediaQuery.of(context).size.height),
           child: Column(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              _buildProfileButton(),
+              SizedBox(height: MediaQuery.of(context).size.height * 0.09),
+              Image.asset('assets/logo.png'),
+              _buildScannerSection(),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildProfileButton() {
+    return ValueListenableBuilder<String>(
+      valueListenable: _username,
+      builder: (context, username, child) {
+        return Container(
+          width: MediaQuery.of(context).size.width * 0.4,
+          padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
+          decoration: BoxDecoration(
+            color: Colors.black,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: InkWell(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => ProfilePage(username: username),
+                ),
+              );
+            },
+            child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                Container(
-                  width: MediaQuery.of(context).size.width * 0.4,
-                  padding: EdgeInsets.symmetric(horizontal: 15, vertical: 5),
-                  decoration: BoxDecoration(
-                    color: Colors.black, // Black background
-                    borderRadius: BorderRadius.circular(12), // Rounded corners
-                  ),
-                  child: InkWell(
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => ProfilePage(
-                            username: _username.text,
-                          ),
-                        ),
-                      );
-                    },
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        Baseline(
-                          baseline: 20.0,
-                          baselineType: TextBaseline.alphabetic,
-                          child: Text(
-                            _username.text,
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 17,
-                              fontWeight: FontWeight.w800,
-                            ),
-                          ),
-                        ),
-                        Icon(
-                          Icons.person,
-                          color: Colors.white,
-                          size: 26,
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                SizedBox(height: MediaQuery.of(context).size.height * 0.09),
-                Image.asset('assets/logo.png'),
-                Center(
-                  child: ClipPath(
-                    clipper: CurvedTopClipper(),
-                    child: Container(
-                      width: MediaQuery.of(context).size.width,
-                      height: MediaQuery.of(context).size.height * 0.5,
+                Baseline(
+                  baseline: 20.0,
+                  baselineType: TextBaseline.alphabetic,
+                  child: Text(
+                    username,
+                    style: const TextStyle(
                       color: Colors.white,
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Container(
-                            margin: EdgeInsets.only(left: 20, right: 20),
-                            child: Text(
-                              'برای اسکن محصولات بعد از کلیک بر روی گزینه اسکن بارکد محصول،‌بارکد آن را  در مقابل دوربین قرار دهید. همچنین می‌توانید بارکد را به صورت دستی وارد نمایید.',
-                              textDirection: TextDirection.rtl,
-                              style: TextStyle(
-                                  fontSize: 13, fontWeight: FontWeight.bold),
-                            ),
-                          ),
-                          InkWell(
-                            onTap: () {
-                              scanBarcode();
-                            },
-                            child: Container(
-                              margin: EdgeInsets.only(top: 25),
-                              width: MediaQuery.of(context).size.width * 0.9,
-                              height: 50,
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(12),
-                                color: Colors.black,
-                              ),
-                              child: const Center(
-                                child: Text(
-                                  'اسکن بارکد محصول',
-                                  style: TextStyle(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 16),
-                                ),
-                              ),
-                            ),
-                          ),
-                          Container(
-                            width: MediaQuery.of(context).size.width * 0.9,
-                            height: 50,
-                            margin: const EdgeInsets.only(top: 40),
-                            child: Row(
-                              children: [
-                                InkWell(
-                                  onTap: () async {
-                                    if (barcodeValidator(
-                                        context, _barcodeController.text)) {
-                                      final product = await fetchProductData(
-                                        _barcodeController.text,
-                                      );
-                                      if (product != null &&
-                                          product != 'not_found') {
-                                        await Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder: (ctx) => ProductPage(
-                                              barcode: _barcodeController.text,
-                                              username: _username.text,
-                                              product: product,
-                                            ),
-                                          ),
-                                        );
-                                      } else if (product == null) {
-                                        await Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                              builder: (ctx) => ProductPage(
-                                                barcode:
-                                                    _barcodeController.text,
-                                                username: _username.text,
-                                              ),
-                                            ));
-                                      }
-                                      _barcodeController.text = '';
-                                    }
-                                  },
-                                  child: Container(
-                                    width: MediaQuery.of(context).size.width *
-                                        0.14,
-                                    height: 50,
-                                    decoration: BoxDecoration(
-                                        color: Colors.black,
-                                        borderRadius: BorderRadius.circular(5)),
-                                    margin: EdgeInsets.only(
-                                        right:
-                                            MediaQuery.of(context).size.width *
-                                                0.02),
-                                    child: const Icon(
-                                      Icons.search,
-                                      size: 25,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                ),
-                                Expanded(
-                                  child: Container(
-                                    margin: EdgeInsets.only(
-                                        left:
-                                            MediaQuery.of(context).size.width *
-                                                0.02),
-                                    child: Directionality(
-                                      textDirection: TextDirection.rtl,
-                                      child: TextField(
-                                        controller: _barcodeController,
-                                        textDirection: TextDirection.rtl,
-                                        decoration: InputDecoration(
-                                          labelText: "بارکد محصول را وارد کنید",
-                                          labelStyle: TextStyle(
-                                              color: Color.fromARGB(
-                                                  255, 40, 40, 40),
-                                              fontSize: 13,
-                                              fontWeight: FontWeight.w400),
-                                          contentPadding: EdgeInsets.symmetric(
-                                              vertical: 10, horizontal: 10),
-                                          enabledBorder: OutlineInputBorder(
-                                            borderSide: BorderSide(
-                                                color: Colors.grey, width: 0.0),
-                                          ),
-                                          focusedBorder: OutlineInputBorder(
-                                            borderSide: BorderSide(
-                                                color: Colors.grey, width: 0.0),
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                )
-                              ],
-                            ),
-                          ),
-                          SizedBox(height: 50),
-                        ],
-                      ),
+                      fontSize: 17,
+                      fontWeight: FontWeight.w800,
                     ),
                   ),
                 ),
-              ]),
-        )));
+                const Icon(
+                  Icons.person,
+                  color: Colors.white,
+                  size: 26,
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildScannerSection() {
+    return Center(
+      child: ClipPath(
+        clipper: CurvedTopClipper(),
+        child: Container(
+          width: MediaQuery.of(context).size.width,
+          height: MediaQuery.of(context).size.height * 0.5,
+          color: Colors.white,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              _buildScannerInstructions(),
+              _buildScanButton(),
+              _buildManualBarcodeEntry(),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildScannerInstructions() {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 20),
+      child: const Text(
+        'برای اسکن محصولات بعد از کلیک بر روی گزینه اسکن بارکد محصول،‌بارکد آن را  در مقابل دوربین قرار دهید. همچنین می‌توانید بارکد را به صورت دستی وارد نمایید.',
+        textDirection: TextDirection.rtl,
+        style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+      ),
+    );
+  }
+
+  Widget _buildScanButton() {
+    return InkWell(
+      onTap: scanBarcode,
+      child: Container(
+        margin: const EdgeInsets.only(top: 25),
+        width: MediaQuery.of(context).size.width * 0.9,
+        height: 50,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(12),
+          color: Colors.black,
+        ),
+        child: const Center(
+          child: Text(
+            'اسکن بارکد محصول',
+            style: TextStyle(
+                color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildManualBarcodeEntry() {
+    return Container(
+      width: MediaQuery.of(context).size.width * 0.9,
+      height: 50,
+      margin: const EdgeInsets.only(top: 40),
+      child: Row(
+        children: [
+          InkWell(
+            onTap: () async {
+              if (barcodeValidator(_barcodeController.text)) {
+                final product = await fetchProductData(_barcodeController.text);
+                navigateToProductPage(_barcodeController.text, product);
+                _barcodeController.clear();
+              } else {
+                showInvalidBarcodeMessage();
+              }
+            },
+            child: Container(
+              width: MediaQuery.of(context).size.width * 0.14,
+              height: 50,
+              decoration: BoxDecoration(
+                color: Colors.black,
+                borderRadius: BorderRadius.circular(5),
+              ),
+              margin: EdgeInsets.only(
+                  right: MediaQuery.of(context).size.width * 0.02),
+              child: const Icon(
+                Icons.search,
+                size: 25,
+                color: Colors.white,
+              ),
+            ),
+          ),
+          Expanded(
+            child: Container(
+              margin: EdgeInsets.only(
+                  left: MediaQuery.of(context).size.width * 0.02),
+              child: Directionality(
+                textDirection: TextDirection.rtl,
+                child: TextField(
+                  controller: _barcodeController,
+                  textDirection: TextDirection.rtl,
+                  decoration: const InputDecoration(
+                    labelText: "بارکد محصول را وارد کنید",
+                    labelStyle: TextStyle(
+                      color: Color.fromARGB(255, 40, 40, 40),
+                      fontSize: 13,
+                      fontWeight: FontWeight.w400,
+                    ),
+                    contentPadding:
+                        EdgeInsets.symmetric(vertical: 10, horizontal: 10),
+                    enabledBorder: OutlineInputBorder(
+                      borderSide: BorderSide(color: Colors.grey, width: 0.0),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderSide: BorderSide(color: Colors.grey, width: 0.0),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

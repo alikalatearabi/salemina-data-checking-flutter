@@ -1,22 +1,20 @@
-// ignore_for_file: prefer_const_constructors
-
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:salemina_data/methods/signup.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-
-void showLoginPopup(BuildContext context, TextEditingController nameController, TextEditingController passwordController) {
+void showLoginPopup(BuildContext context, ValueNotifier<String> nameNotifier,
+    TextEditingController passwordController) {
   showDialog(
     context: context,
-    barrierDismissible: false,  
+    barrierDismissible: false,
     builder: (BuildContext context) {
       return AlertDialog(
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(25.0),
         ),
-        contentPadding: EdgeInsets.all(16.0),
+        contentPadding: const EdgeInsets.all(16.0),
         content: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -30,27 +28,32 @@ void showLoginPopup(BuildContext context, TextEditingController nameController, 
                   color: Colors.black,
                 ),
               ),
-              SizedBox(height: 20),
-              _buildTextField(context, 'نام کاربری', nameController),
-              SizedBox(height: 10),
+              const SizedBox(height: 20),
+              _buildTextField(context, 'نام کاربری', nameNotifier),
+              const SizedBox(height: 10),
               _buildTextField(context, 'رمزعبور', passwordController),
-              SizedBox(height: 20),
-              InkWell(child: _buildButton(context, 'ورود'),
-              onTap: (){
-                loginAndHandleResponse(context, nameController, passwordController);
-                
-                }
+              const SizedBox(height: 20),
+              InkWell(
+                child: _buildButton(context, 'ورود'),
+                onTap: () {
+                  loginAndHandleResponse(
+                      context, nameNotifier, passwordController);
+                },
               ),
-              SizedBox(
-                height: 5,
+              const SizedBox(height: 5),
+              TextButton(
+                onPressed: () {
+                  showSignUpPopup(context, nameNotifier, passwordController);
+                },
+                child: const Text(
+                  '.حساب کاربری ندارید؟ ثبت‌نام کنید',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black,
+                  ),
+                ),
               ),
-              TextButton(onPressed: (){showSignUpPopup(context, nameController, passwordController);}, child: Text('.حساب کاربری ندارید؟ ثبت‌نام کنید',
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.bold,
-                color: Colors.black
-              ),
-              ))
             ],
           ),
         ),
@@ -58,8 +61,12 @@ void showLoginPopup(BuildContext context, TextEditingController nameController, 
     },
   );
 }
- loginAndHandleResponse(BuildContext context, TextEditingController nameController, TextEditingController passwordController) async {
-  final username = nameController.text;
+
+Future<void> loginAndHandleResponse(
+    BuildContext context,
+    ValueNotifier<String> nameNotifier,
+    TextEditingController passwordController) async {
+  final username = nameNotifier.value;
   final password = passwordController.text;
 
   final url = Uri.parse('http://194.147.222.179:3005/api/auth/login');
@@ -74,17 +81,13 @@ void showLoginPopup(BuildContext context, TextEditingController nameController, 
     if (response.statusCode == 200) {
       final Map<String, dynamic> responseData = jsonDecode(response.body);
       SharedPreferences.setMockInitialValues({});
-        final storage = await SharedPreferences.getInstance();
+      final storage = await SharedPreferences.getInstance();
 
-        String username = json.decode(response.body)['username'];
-        await storage.setString('username', username);
-        print('ssssss'+username);
-     
-      
+      String username = json.decode(response.body)['username'];
+      await storage.setString('username', username);
 
       Navigator.of(context).pop();
-      showSnackBarMessagesuccess(context, nameController.text);
-      return username;
+      showSnackBarMessagesuccess(context, username);
     } else {
       showSnackBarMessagefailure(context);
     }
@@ -93,91 +96,120 @@ void showLoginPopup(BuildContext context, TextEditingController nameController, 
   }
 }
 
-
 void showSnackBarMessagesuccess(BuildContext context, String username) {
   final snackBar = SnackBar(
-    content: Text(
+    content: const Text(
       "با موفقیت وارد شدید",
       style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
-      textAlign: TextAlign.right, 
+      textAlign: TextAlign.right,
     ),
-    backgroundColor: Colors.green, 
-    behavior: SnackBarBehavior.floating, 
+    backgroundColor: Colors.green,
+    behavior: SnackBarBehavior.floating,
     shape: RoundedRectangleBorder(
       borderRadius: BorderRadius.circular(12.0),
     ),
-    duration: Duration(seconds: 3), 
+    duration: const Duration(seconds: 3),
   );
 
   ScaffoldMessenger.of(context).showSnackBar(snackBar);
 }
-void showSnackBarMessagefailure(BuildContext context, ) {
+
+void showSnackBarMessagefailure(BuildContext context) {
   final snackBar = SnackBar(
-    content: Text(
+    content: const Text(
       "مجددا تلاش کنید",
       style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
-      textAlign: TextAlign.right, 
+      textAlign: TextAlign.right,
     ),
-    backgroundColor: Colors.red, 
-    behavior: SnackBarBehavior.floating, 
+    backgroundColor: Colors.red,
+    behavior: SnackBarBehavior.floating,
     shape: RoundedRectangleBorder(
       borderRadius: BorderRadius.circular(12.0),
     ),
-    duration: Duration(seconds: 3), 
+    duration: const Duration(seconds: 3),
   );
 
   ScaffoldMessenger.of(context).showSnackBar(snackBar);
 }
-Widget _buildTextField(BuildContext context, String labelText,
-      TextEditingController controller) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 6),
-      width: MediaQuery.of(context).size.width * 0.40,
-      child: Directionality(
-        textDirection: TextDirection.rtl,
-        child: TextField(
-          controller: controller,
-          style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
-          textDirection: TextDirection.rtl,
-          decoration: InputDecoration(
-            labelText: labelText,
-            labelStyle: const TextStyle(
-              color: Color.fromARGB(255, 40, 40, 40),
-              fontSize: 12,
-              fontWeight: FontWeight.w400,
-            ),
-            contentPadding:
-                const EdgeInsets.symmetric(vertical: 10, horizontal: 10),
-            enabledBorder: const OutlineInputBorder(
-              borderSide: BorderSide(color: Colors.grey, width: 0.0),
-            ),
-            focusedBorder: const OutlineInputBorder(
-              borderSide: BorderSide(color: Colors.grey, width: 0.0),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
 
-  Widget _buildButton(BuildContext context, String text) {
-    return Container(
-      alignment: Alignment.center,
-      width: MediaQuery.of(context).size.width * 0.34,
-      height: 45,
-      margin: const EdgeInsets.only(bottom: 6),
-      decoration: BoxDecoration(
-        color: Colors.black,
-        borderRadius: BorderRadius.circular(12),
+Widget _buildTextField(
+    BuildContext context, String labelText, dynamic controller) {
+  return Container(
+    margin: const EdgeInsets.only(bottom: 6),
+    width: MediaQuery.of(context).size.width * 0.40,
+    child: Directionality(
+      textDirection: TextDirection.rtl,
+      child: controller is ValueNotifier<String>
+          ? ValueListenableBuilder<String>(
+              valueListenable: controller,
+              builder: (context, value, child) {
+                return TextField(
+                  onChanged: (newValue) => controller.value = newValue,
+                  style: const TextStyle(
+                      fontSize: 12, fontWeight: FontWeight.w600),
+                  textDirection: TextDirection.rtl,
+                  decoration: InputDecoration(
+                    labelText: labelText,
+                    labelStyle: const TextStyle(
+                      color: Color.fromARGB(255, 40, 40, 40),
+                      fontSize: 12,
+                      fontWeight: FontWeight.w400,
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(
+                        vertical: 10, horizontal: 10),
+                    enabledBorder: const OutlineInputBorder(
+                      borderSide: BorderSide(color: Colors.grey, width: 0.0),
+                    ),
+                    focusedBorder: const OutlineInputBorder(
+                      borderSide: BorderSide(color: Colors.grey, width: 0.0),
+                    ),
+                  ),
+                );
+              },
+            )
+          : TextField(
+              controller: controller,
+              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+              textDirection: TextDirection.rtl,
+              decoration: InputDecoration(
+                labelText: labelText,
+                labelStyle: const TextStyle(
+                  color: Color.fromARGB(255, 40, 40, 40),
+                  fontSize: 12,
+                  fontWeight: FontWeight.w400,
+                ),
+                contentPadding:
+                    const EdgeInsets.symmetric(vertical: 10, horizontal: 10),
+                enabledBorder: const OutlineInputBorder(
+                  borderSide: BorderSide(color: Colors.grey, width: 0.0),
+                ),
+                focusedBorder: const OutlineInputBorder(
+                  borderSide: BorderSide(color: Colors.grey, width: 0.0),
+                ),
+              ),
+            ),
+    ),
+  );
+}
+
+Widget _buildButton(BuildContext context, String text) {
+  return Container(
+    alignment: Alignment.center,
+    width: MediaQuery.of(context).size.width * 0.34,
+    height: 45,
+    margin: const EdgeInsets.only(bottom: 6),
+    decoration: BoxDecoration(
+      color: Colors.black,
+      borderRadius: BorderRadius.circular(12),
+    ),
+    child: Text(
+      text,
+      textAlign: TextAlign.center,
+      style: const TextStyle(
+        color: Colors.white,
+        fontSize: 9,
+        fontWeight: FontWeight.w700,
       ),
-      child: Text(
-        text,
-        textAlign: TextAlign.center,
-        style: const TextStyle(
-          color: Colors.white,
-          fontSize: 9,
-          fontWeight: FontWeight.w700,
-        ),
-      ),
-    );
-  }
+    ),
+  );
+}
