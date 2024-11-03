@@ -3,7 +3,6 @@ import 'package:flutter/services.dart';
 import 'package:salemina_data/widgets/profile_button.dart';
 import 'package:salemina_data/widgets/scanner_section.dart';
 import '/methods/login.dart';
-import 'package:http/http.dart' as http;
 
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key});
@@ -29,8 +28,6 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   void dispose() {
     _barcodeController.dispose();
-    _username.dispose();
-    _password.dispose();
     _username.dispose();
     _password.dispose();
     super.dispose();
