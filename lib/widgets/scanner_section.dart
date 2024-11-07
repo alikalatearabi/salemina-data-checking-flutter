@@ -119,11 +119,12 @@ class ScannerSectionState extends State<ScannerSection> {
       child: ClipPath(
         clipper: CurvedTopClipper(),
         child: Container(
+          padding: const EdgeInsets.only(bottom: 50),
           width: MediaQuery.of(context).size.width,
-          height: MediaQuery.of(context).size.height * 0.5,
+          height: MediaQuery.of(context).size.height * 0.4,
           color: Colors.white,
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisAlignment: MainAxisAlignment.end,
             children: [
               _buildScannerInstructions(),
               _buildScanButton(),
