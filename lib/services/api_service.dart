@@ -6,7 +6,10 @@ import 'package:salemina_data/shared/popup.dart';
 import 'package:salemina_data/shared/styled_banner.dart';
 
 Future<void> uploadMainImageApi(
-    BuildContext context, File imageFile, Function loadingDialog) async {
+  BuildContext context,
+  File imageFile,
+  Function loadingDialog,
+) async {
   loadingDialog(context);
   String url = 'http://194.147.222.179:3005/api/product/image/main';
 

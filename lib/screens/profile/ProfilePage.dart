@@ -23,11 +23,13 @@ class ProfilePageState extends State<ProfilePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: Colors.white,
         title: const Align(
           alignment: Alignment.centerRight,
           child: Text('پروفایل کاربر'),
         ),
       ),
+      backgroundColor: Colors.white,
       body: Center(
         child: FutureBuilder<Map<String, dynamic>?>(
           future: userProfileData,
