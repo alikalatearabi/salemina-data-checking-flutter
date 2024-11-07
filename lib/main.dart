@@ -1,8 +1,7 @@
-// ignore_for_file: non_constant_identifier_names, prefer_const_constructors, deprecated_member_use, sized_box_for_whitespace
 import 'dart:core';
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:salemina_data/screens/home/home.dart';
+import 'package:salemina_data/screens/login/login.dart';
 
 class MyHttpOverrides extends HttpOverrides {
   @override
@@ -26,7 +25,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       theme: ThemeData(fontFamily: 'Yekan'),
-      home: const MyHomePage(),
+      home: const LoginPage(),
     );
   }
 }

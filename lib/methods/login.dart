@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:salemina_data/methods/signup.dart';
+import 'package:salemina_data/widgets/custom_snack_bar.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 
@@ -78,7 +79,6 @@ void showLoginPopup(BuildContext context, TextEditingController nameController, 
 
         String username = json.decode(response.body)['username'];
         await storage.setString('username', username);
-        print('ssssss'+username);
      
       
 
@@ -93,41 +93,6 @@ void showLoginPopup(BuildContext context, TextEditingController nameController, 
   }
 }
 
-
-void showSnackBarMessagesuccess(BuildContext context, String username) {
-  final snackBar = SnackBar(
-    content: Text(
-      "با موفقیت وارد شدید",
-      style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
-      textAlign: TextAlign.right, 
-    ),
-    backgroundColor: Colors.green, 
-    behavior: SnackBarBehavior.floating, 
-    shape: RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(12.0),
-    ),
-    duration: Duration(seconds: 3), 
-  );
-
-  ScaffoldMessenger.of(context).showSnackBar(snackBar);
-}
-void showSnackBarMessagefailure(BuildContext context, ) {
-  final snackBar = SnackBar(
-    content: Text(
-      "مجددا تلاش کنید",
-      style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
-      textAlign: TextAlign.right, 
-    ),
-    backgroundColor: Colors.red, 
-    behavior: SnackBarBehavior.floating, 
-    shape: RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(12.0),
-    ),
-    duration: Duration(seconds: 3), 
-  );
-
-  ScaffoldMessenger.of(context).showSnackBar(snackBar);
-}
 Widget _buildTextField(BuildContext context, String labelText,
       TextEditingController controller) {
     return Container(

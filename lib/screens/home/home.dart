@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:salemina_data/widgets/profile_button.dart';
 import 'package:salemina_data/widgets/scanner_section.dart';
-import '/methods/login.dart';
 
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key});
@@ -20,9 +19,6 @@ class _MyHomePageState extends State<MyHomePage> {
   void initState() {
     super.initState();
     _barcodeController = TextEditingController();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      showLoginPopup(context, _username, _password);
-    });
   }
 
   @override
