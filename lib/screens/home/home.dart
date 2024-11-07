@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:salemina_data/widgets/profile_button.dart';
 import 'package:salemina_data/widgets/scanner_section.dart';
 
@@ -12,20 +13,25 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   late TextEditingController _barcodeController;
-  final _username = TextEditingController();
-  final _password = TextEditingController();
+  String _username = '';
 
   @override
   void initState() {
     super.initState();
     _barcodeController = TextEditingController();
+    _loadUsername();
+  }
+
+  Future<void> _loadUsername() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _username = prefs.getString('username') ?? '';
+    });
   }
 
   @override
   void dispose() {
     _barcodeController.dispose();
-    _username.dispose();
-    _password.dispose();
     super.dispose();
   }
 
@@ -47,12 +53,12 @@ class _MyHomePageState extends State<MyHomePage> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              ProfileButton(username: _username.text),
+              ProfileButton(username: _username),
               SizedBox(height: MediaQuery.of(context).size.height * 0.09),
               Image.asset('assets/logo.png'),
               ScannerSection(
                 barcodeController: _barcodeController,
-                username: _username.text,
+                username: _username,
               ),
             ],
           ),

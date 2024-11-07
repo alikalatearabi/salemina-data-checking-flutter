@@ -4,7 +4,6 @@ import 'package:salemina_data/classes/product.dart';
 import 'package:salemina_data/screens/home/product_page.dart';
 import 'dart:convert';
 import 'dart:io';
-
 import 'package:salemina_data/services/curved_top_clipper.dart';
 
 class ScannerSection extends StatefulWidget {
