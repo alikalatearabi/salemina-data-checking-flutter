@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:salemina_data/services/api_service.dart';
+import 'package:salemina_data/services/profile_service.dart';
 
 class ProfilePage extends StatefulWidget {
   final String username;

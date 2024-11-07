@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:barcode_scan2/barcode_scan2.dart';
 import 'package:salemina_data/classes/product.dart';
-import 'package:salemina_data/screens/home/product_page.dart';
 import 'package:salemina_data/screens/product/product_page.dart';
 import 'dart:convert';
 import 'dart:io';
