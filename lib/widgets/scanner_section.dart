@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:barcode_scan2/barcode_scan2.dart';
 import 'package:salemina_data/classes/product.dart';
+import 'package:salemina_data/screens/product/exist_product_page.dart';
 import 'package:salemina_data/screens/product/product_page.dart';
 import 'dart:convert';
 import 'dart:io';
@@ -21,20 +22,72 @@ class ScannerSection extends StatefulWidget {
 }
 
 class ScannerSectionState extends State<ScannerSection> {
+  bool _isLoading = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Stack(
+        children: [
+          ClipPath(
+            clipper: CurvedTopClipper(),
+            child: Container(
+              padding: const EdgeInsets.only(bottom: 50),
+              width: MediaQuery.of(context).size.width,
+              height: MediaQuery.of(context).size.height * 0.4,
+              color: Colors.white,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  _buildScannerInstructions(),
+                  _buildScanButton(),
+                  _buildManualBarcodeEntry(),
+                ],
+              ),
+            ),
+          ),
+          if (_isLoading)
+            Positioned.fill(
+              child: Container(
+                color: Colors.black.withOpacity(0.5),
+                child: const Center(
+                  child: CircularProgressIndicator(
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
   Future<void> scanBarcode() async {
     try {
       final scanResult = await BarcodeScanner.scan();
       final scannedBarcode = scanResult.rawContent;
 
       if (scannedBarcode.isNotEmpty && int.tryParse(scannedBarcode) != null) {
+        setState(() {
+          _isLoading = true;
+        });
+
         final product = await fetchProductData(scannedBarcode);
-        if (product != 'error400') {
+
+        setState(() {
+          _isLoading = false;
+        });
+
+        if (product == 'new') {
           navigateToProductPage(scannedBarcode, product);
         }
       } else {
         showInvalidBarcodeMessage();
       }
     } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
       print('Failed to get barcode: $e');
     }
   }
@@ -49,7 +102,13 @@ class ScannerSectionState extends State<ScannerSection> {
 
       if (response.statusCode == 200) {
         final responseBody = await response.transform(utf8.decoder).join();
-        return Product.fromJson(jsonDecode(responseBody));
+        if (responseBody.isEmpty) {
+          return 'new';
+        } else {
+          final product = Product.fromJson(jsonDecode(responseBody));
+          navigateToExistedProductPage(barcode, product);
+          return 'review';
+        }
       } else if (response.statusCode == 400) {
         showProductAlreadyRegisteredMessage();
         return 'error400';
@@ -71,8 +130,18 @@ class ScannerSectionState extends State<ScannerSection> {
       MaterialPageRoute(
         builder: (ctx) => NewProductPage(
           barcode: barcode,
-          // username: widget.username,
-          // product: product,
+        ),
+      ),
+    );
+  }
+
+  void navigateToExistedProductPage(String barcode, Product product) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (ctx) => ExistProductPage(
+          barcode: barcode,
+          product: product,
         ),
       ),
     );
@@ -111,29 +180,6 @@ class ScannerSectionState extends State<ScannerSection> {
 
   bool barcodeValidator(String barcode) {
     return barcode.length == 13 && int.tryParse(barcode) != null;
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: ClipPath(
-        clipper: CurvedTopClipper(),
-        child: Container(
-          padding: const EdgeInsets.only(bottom: 50),
-          width: MediaQuery.of(context).size.width,
-          height: MediaQuery.of(context).size.height * 0.4,
-          color: Colors.white,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              _buildScannerInstructions(),
-              _buildScanButton(),
-              _buildManualBarcodeEntry(),
-            ],
-          ),
-        ),
-      ),
-    );
   }
 
   Widget _buildScannerInstructions() {
@@ -191,7 +237,7 @@ class ScannerSectionState extends State<ScannerSection> {
       onTap: () async {
         if (barcodeValidator(widget.barcodeController.text)) {
           final product = await fetchProductData(widget.barcodeController.text);
-          if (product != 'error400') {
+          if (product == 'new') {
             navigateToProductPage(widget.barcodeController.text, product);
           }
           widget.barcodeController.clear();

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:salemina_data/screens/home/home.dart';
+import 'package:salemina_data/screens/home/sign_up_page.dart';
 import 'package:salemina_data/services/auth_service.dart';
 
 class LoginPage extends StatefulWidget {
@@ -105,7 +106,14 @@ class LoginPageState extends State<LoginPage> {
                 const SizedBox(height: 20.0),
                 Center(
                   child: GestureDetector(
-                    onTap: () {},
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const SignUpPage(),
+                        ),
+                      );
+                    },
                     child: const Text.rich(
                       TextSpan(
                         text: 'حساب کاربری ندارید؟ ',

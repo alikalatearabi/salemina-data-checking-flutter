@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:salemina_data/screens/login/login.dart';
 import 'package:salemina_data/services/profile_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ProfilePage extends StatefulWidget {
   final String username;
@@ -28,6 +30,12 @@ class ProfilePageState extends State<ProfilePage> {
           alignment: Alignment.centerRight,
           child: Text('پروفایل کاربر'),
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.logout, color: Colors.red),
+            onPressed: _showLogoutConfirmation,
+          ),
+        ],
       ),
       backgroundColor: Colors.white,
       body: Center(
@@ -66,6 +74,39 @@ class ProfilePageState extends State<ProfilePage> {
     );
   }
 
+  void _showLogoutConfirmation() {
+    showDialog(
+      context: context,
+      builder: (context) => Directionality(
+        textDirection: TextDirection.rtl,
+        child: AlertDialog(
+          title: const Text('تایید خروج'),
+          content: const Text('ایا از انجام این کار اطمینان دارید؟'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('لغو'),
+            ),
+            TextButton(
+              onPressed: _logout,
+              child: const Text('خروج'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _logout() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('username');
+
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(builder: (context) => const LoginPage()),
+      (route) => false,
+    );
+  }
+
   Widget _buildCardView(Map<String, dynamic> data) {
     final statusMap = {
       '11': 'داده اصلی تایید شده توسط کاربر',
@@ -78,20 +119,16 @@ class ProfilePageState extends State<ProfilePage> {
 
     List<Widget> cards = [];
 
-    // Create Main Data Status Cards
     data['Main_data_status'].forEach((key, value) {
       final title = statusMap[key];
       if (title != null) {
-        // Check if title is not null
         cards.add(_buildCard(title, value.toString()));
       }
     });
 
-    // Create Extra Data Status Cards
     data['Extra_data_status'].forEach((key, value) {
       final title = statusMap['extra$key'];
       if (title != null) {
-        // Check if title is not null
         cards.add(_buildCard(title, value.toString()));
       }
     });
