@@ -81,11 +81,12 @@ class LoginPageState extends State<LoginPage> {
                       _passwordController,
                     );
                     if (username == 'success') {
-                      Navigator.push(
+                      Navigator.pushAndRemoveUntil(
                         context,
                         MaterialPageRoute(
                           builder: (context) => const MyHomePage(),
                         ),
+                        (route) => false,
                       );
                     }
                   },
